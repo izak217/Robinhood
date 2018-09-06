@@ -1342,9 +1342,9 @@ class Robinhood:
     def cancel_order(
             self,
             order_id
-    ): 
+    ):
         """
-        Cancels specified order and returns the response (results from `orders` command). 
+        Cancels specified order and returns the response (results from `orders` command).
         If order cannot be cancelled, `None` is returned.
 
         Args:
@@ -1353,9 +1353,9 @@ class Robinhood:
         Returns:
             (:obj:`requests.request`): result from `orders` put command
         """
-        if order_id is str:
+        if type(order_id) is str:
             try:
-                order = self.session.get(self.endpoints['orders'] + order_id, timeout=15).json()
+                order = self.session.get(endpoints.orders(order_id), timeout=15).json()
             except (requests.exceptions.HTTPError) as err_msg:
                 raise ValueError('Failed to get Order for ID: ' + order_id
                     + '\n Error message: '+ repr(err_msg))
@@ -1363,16 +1363,16 @@ class Robinhood:
             raise ValueError('Cancelling orders requires a valid order_id string')
 
         if order.get('cancel') is not None:
-            try: 
+            try:
                 res = self.session.post(order['cancel'], timeout=15)
                 res.raise_for_status()
             except (requests.exceptions.HTTPError) as err_msg:
                 raise ValueError('Failed to cancel order ID: ' + order_id
                      + '\n Error message: '+ repr(err_msg))
                 return None
-            
+
         # Order type cannot be cancelled without a valid cancel link
-        else: 
+        else:
             raise ValueError('Unable to cancel order ID: ' + order_id)
 
         return res
