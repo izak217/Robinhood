@@ -1270,6 +1270,9 @@ class Robinhood:
                 else:
                     order_type = 'limit'
 
+        if(time_in_force is None):
+            raise(ValueError('Time in Force is required call to submit_order'))
+
         symbol = str(symbol).upper()
         order_type = str(order_type).lower()
         time_in_force = str(time_in_force).lower()
