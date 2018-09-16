@@ -135,7 +135,7 @@ class Robinhood:
         #fields = { 'password' : self.password, 'username' : self.username }
 
         if mfa_code:
-            fields = { 'client_id' : 'c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS',
+            payload = { 'client_id' : 'c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS',
                         'expires_in' : 86400,
                         'grant_type': 'password',
                         'password' : self.password,
@@ -143,7 +143,7 @@ class Robinhood:
                         'username' : self.username,
                         'mfa_code': self.mfa_code }
         else:
-            fields = { 'client_id' : 'c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS',
+            payload = { 'client_id' : 'c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS',
                         'expires_in' : 86400,
                         'grant_type': 'password',
                         'password' : self.password,
@@ -153,15 +153,15 @@ class Robinhood:
         #     data = urllib.urlencode(fields) #py2
         # except:
         #     data = urllib.parse.urlencode(fields) #py3
-        res = self.session.post(endpoints.login(), data=fields)
+        res = self.session.post(endpoints.login(), data=payload)
         #res.raise_for_status()
-        res = res.json()
+        data = res.json()
         #print(data)
         try:
             #self.auth_token = res['token']
-            self.oauth_token = res['access_token']
+            self.oauth_token = data['access_token']
         except KeyError:
-            return res
+            return data
         #self.headers['Authorization'] = 'Token '+self.auth_token
         self.headers['Authorization'] = 'Bearer ' + self.oauth_token
 
