@@ -61,9 +61,9 @@ class Robinhood:
             "Accept-Encoding": "gzip, deflate",
             "Accept-Language": "en;q=1, fr;q=0.9, de;q=0.8, ja;q=0.7, nl;q=0.6, it;q=0.5",
             "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
-            "X-Robinhood-API-Version": "1.0.0",
+            "X-Robinhood-API-Version": "1.245.2",
             "Connection": "keep-alive",
-            "User-Agent": "Robinhood/823 (iPhone; iOS 7.1.2; Scale/2.00)"
+            "User-Agent": "Robinhood/823 (iPhone; iOS 9.1.2; Scale/2.00)"
         }
         self.session.headers = self.headers
         self.auth_method = self.login_prompt
@@ -85,47 +85,87 @@ class Robinhood:
         return self.login(username=username, password=password)
 
 
-    def login(self,
-              username,
-              password,
-              mfa_code=None):
-        """Save and test login info for Robinhood accounts
+    # def login(self,
+    #           username,
+    #           password,
+    #           mfa_code=None):
+    #     """Save and test login info for Robinhood accounts
+    #
+    #     Args:
+    #         username (str): username
+    #         password (str): password
+    #
+    #     Returns:
+    #         (bool): received valid auth token
+    #
+    #     """
+    #
+    #     self.username = username
+    #     self.password = password
+    #     payload = {
+    #         'password': self.password,
+    #         'username': self.username
+    #     }
+    #
+    #     if mfa_code:
+    #         payload['mfa_code'] = mfa_code
+    #
+    #     try:
+    #         res = self.session.post(endpoints.login(), data=payload, timeout=15)
+    #         res.raise_for_status()
+    #         data = res.json()
+    #     except requests.exceptions.HTTPError:
+    #         raise RH_exception.LoginFailed()
+    #
+    #     if 'mfa_required' in data.keys():           # pragma: no cover
+    #         raise RH_exception.TwoFactorRequired()  # requires a second call to enable 2FA
+    #
+    #     if 'token' in data.keys():
+    #         self.auth_token = data['token']
+    #         self.headers['Authorization'] = 'Token ' + self.auth_token
+    #         return True
+    #
+    #     return False
 
-        Args:
-            username (str): username
-            password (str): password
-
-        Returns:
-            (bool): received valid auth token
-
-        """
-
+    def login(self, username, password, mfa_code=None) :
         self.username = username
         self.password = password
-        payload = {
-            'password': self.password,
-            'username': self.username
-        }
+        self.mfa_code = mfa_code
+        #fields = { 'password' : self.password, 'username' : self.username, 'mfa_code': self.mfa_code }
+        #fields = { 'password' : self.password, 'username' : self.username }
 
         if mfa_code:
-            payload['mfa_code'] = mfa_code
-
+            fields = { 'client_id' : 'c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS',
+                        'expires_in' : 86400,
+                        'grant_type': 'password',
+                        'password' : self.password,
+                        'scope' : 'internal',
+                        'username' : self.username,
+                        'mfa_code': self.mfa_code }
+        else:
+            fields = { 'client_id' : 'c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS',
+                        'expires_in' : 86400,
+                        'grant_type': 'password',
+                        'password' : self.password,
+                        'scope': 'internal',
+                        'username' : self.username }
+        # try:
+        #     data = urllib.urlencode(fields) #py2
+        # except:
+        #     data = urllib.parse.urlencode(fields) #py3
+        res = self.session.post(endpoints.login(), data=fields)
+        #res.raise_for_status()
+        res = res.json()
+        #print(data)
         try:
-            res = self.session.post(endpoints.login(), data=payload, timeout=15)
-            res.raise_for_status()
-            data = res.json()
-        except requests.exceptions.HTTPError:
-            raise RH_exception.LoginFailed()
+            #self.auth_token = res['token']
+            self.oauth_token = res['access_token']
+        except KeyError:
+            return res
+        #self.headers['Authorization'] = 'Token '+self.auth_token
+        self.headers['Authorization'] = 'Bearer ' + self.oauth_token
 
-        if 'mfa_required' in data.keys():           # pragma: no cover
-            raise RH_exception.TwoFactorRequired()  # requires a second call to enable 2FA
-
-        if 'token' in data.keys():
-            self.auth_token = data['token']
-            self.headers['Authorization'] = 'Token ' + self.auth_token
-            return True
-
-        return False
+        return True
 
 
     def logout(self):
