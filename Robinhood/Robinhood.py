@@ -42,6 +42,7 @@ class Robinhood:
     username = None
     password = None
     headers = None
+    auth_data = None
     auth_token = None
     oauth_token = None
 
@@ -156,7 +157,7 @@ class Robinhood:
         res = self.session.post(endpoints.login(), data=payload)
         #res.raise_for_status()
         data = res.json()
-        #print(data)
+        self.auth_data = data
         try:
             #self.auth_token = res['token']
             self.oauth_token = data['access_token']
@@ -183,7 +184,7 @@ class Robinhood:
             warnings.warn('Failed to log out ' + repr(err_msg))
 
         self.headers['Authorization'] = None
-        self.auth_token = None
+        self.oauth_token = None
 
         return req
 
