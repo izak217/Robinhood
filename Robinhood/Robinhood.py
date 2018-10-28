@@ -10,7 +10,7 @@ from enum import Enum
 from six.moves.urllib.parse import unquote  # pylint: disable=E0401
 from six.moves.urllib.request import getproxies  # pylint: disable=E0401
 from six.moves import input
-
+import uuid
 import getpass
 import requests
 import six
@@ -1378,6 +1378,136 @@ class Robinhood:
         res.raise_for_status()
 
         return res
+
+    def submit_options_order(self,
+                             instrument_URL=None,
+                             # symbol=None,
+                             order_type=None,
+                             time_in_force='gtc',
+                             trigger=None,
+                             price=None,
+                             stop_price=None,
+                             quantity=None,
+                             direction=None,
+                             side=None):
+
+
+        """Submits option order to Robinhood
+
+            Args:
+                instrument_URL (str): the RH OPTION URL for the instrument
+                symbol (str): the ticker symbol for the instrument
+                order_type (str): 'MARKET' or 'LIMIT'
+                time_in_force (:enum:`TIME_IN_FORCE`): GFD or GTC (day or
+                                                       until cancelled)
+                trigger (str): IMMEDIATE or STOP enum
+                price (float): The share price you'll accept
+                stop_price (float): The price at which the order becomes a
+                                    market or limit order
+                quantity (int): The number of shares to buy/sell
+                direction (str): 'CREDIT' for put or 'DEBIT' for call
+                side (str): BUY or SELL
+
+            Returns:
+                (:obj:`requests.request`): result from `orders` put command
+        """
+
+
+        # Start with some parameter checks. I'm paranoid about $.
+        if (instrument_URL is None) :
+            raise(ValueError('instrument_URL was not passed to submit_options_order'))
+
+        if (order_type is None) :
+            if(price is None) :
+                order_type = 'market'
+            else:
+                order_type = 'limit'
+
+        if (time_in_force is None) :
+            raise(ValueError('Time in Force is required call to submit_order'))
+
+        if (trigger is None) :
+            trigger = 'immediate'
+
+        if (direction is None) :
+            raise(ValueError('Direction is neither credit (put) nor debit (call) in call to submit_order'))
+
+        if (side is None) :
+            raise(ValueError('Order is neither buy nor sell in call to submit_order'))
+
+        order_type = str(order_type).lower()
+        time_in_force = str(time_in_force).lower()
+        trigger = str(trigger).lower()
+        direction = str(direction).lower()
+        side = str(side).lower()
+
+        if (order_type != 'market') and (order_type != 'limit') :
+            raise(ValueError('Invalid order_type in call to submit_order'))
+
+        if(order_type == 'limit') :
+            if (price is None) :
+                raise(ValueError('Limit order has no price in call to submit_order'))
+            if (price <= 0) :
+                raise(ValueError('Price must be positive number in call to submit_order'))
+
+        if (trigger == 'stop') :
+            if (stop_price is None) :
+                raise(ValueError('Stop order has no stop_price in call to submit_order'))
+            if(price <= 0) :
+                raise(ValueError('Stop_price must be positive number in call to submit_order'))
+
+        if (stop_price is not None) :
+            if (trigger != 'stop') :
+                raise(ValueError('Stop price set for non-stop order in call to submit_order'))
+
+        if (price is None) :
+            if (order_type == 'limit') :
+                raise(ValueError('Limit order has no price in call to submit_order'))
+
+        if (price is not None) :
+            if (order_type.lower() == 'market') :
+                raise(ValueError('Market order has price limit in call to submit_order'))
+
+        price = float(price)
+
+        if (quantity is None) :
+            raise(ValueError('No quantity specified in call to submit_order'))
+
+        quantity = int(quantity)
+
+        if(quantity <= 0):
+            raise(ValueError('Quantity must be positive number in call to submit_order'))
+
+        payload = {}
+        for field, value in [
+                                ('account', self.get_account()['url']),
+                                ('legs', ''),
+                                ('type', order_type),
+                                ('time_in_force', time_in_force),
+                                ('direction', direction),
+                                ('trigger', trigger),
+                                ('price', price),
+                                ('quantity', quantity),
+                                ('ref_id', str(uuid.uuid4())),
+                            ]:
+
+            if (value is not None) :
+                if field == 'legs' :
+                    leg = {}
+                    leg['side'] = side
+                    leg['option'] = instrument_URL
+                    leg['position_effect'] = 'open'
+                    leg['ratio_quantity'] = 1
+                    payload[field] = [leg]
+                else :
+                    payload[field] = value
+
+        self.session.headers['Content-Type'] = 'application/json'
+        res = self.session.post(endpoints.options_orders(), json=payload, timeout=15)
+        res.raise_for_status()
+
+        return res
+
 
     ##############################
     #                          CANCEL ORDER
