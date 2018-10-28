@@ -1,6 +1,6 @@
 def login():
     return "https://api.robinhood.com/oauth2/token/"
-    #return "https://api.robinhood.com/api-token-auth/"
+    return "https://api.robinhood.com/api-token-auth/"
 
 def logout():
     return "https://api.robinhood.com/api-token-logout/"
@@ -31,7 +31,7 @@ def edocuments():
 
 def instruments(instrumentId=None, option=None):
     '''
-    Return information about a specific instrument by providing its instrument id. 
+    Return information about a specific instrument by providing its instrument id.
     Add extra options for additional information such as "popularity"
     '''
     return "https://api.robinhood.com/instruments/" + ("{id}/".format(id=instrumentId) if instrumentId else "") + ("{_option}/".format(_option=option) if option else "")
@@ -89,6 +89,9 @@ def chain(instrumentid):
 
 def options(chainid, dates, option_type):
     return "https://api.robinhood.com/options/instruments/?chain_id={_chainid}&expiration_dates={_dates}&state=active&tradability=tradable&type={_type}".format(_chainid=chainid, _dates=dates, _type=option_type)
+
+def options_orders():
+    return "https://api.robinhood.com/options/orders/"
 
 def market_data(optionid):
     return "https://api.robinhood.com/marketdata/options/{_optionid}/".format(_optionid=optionid)
