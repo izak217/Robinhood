@@ -1496,7 +1496,10 @@ class Robinhood:
                     leg = {}
                     leg['side'] = side
                     leg['option'] = instrument_URL
-                    leg['position_effect'] = 'open'
+                    if side == 'buy :
+                        leg['position_effect'] = 'open'
+                    else :
+                        leg['position_effect'] = 'close'
                     leg['ratio_quantity'] = 1
                     payload[field] = [leg]
                 else :
