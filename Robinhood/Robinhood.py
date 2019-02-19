@@ -675,8 +675,8 @@ class Robinhood:
                 Options Contracts (List): a list (chain) of contracts for a given underlying equity instrument
         """
         # instrumentid = self.get_url(self.quote_data(stock)["instrument"])["id"]
-        chain_id = self.get_url(endpoints.chain(instrumentid))["results"][0]["id"]
-        return chain_id
+        option_chain = self.get_url(endpoints.chain(instrumentid))
+        return option_chain
 
     def get_options(self, stock, expiration_dates, option_type):
         """Get a list (chain) of options contracts belonging to a particular stock
