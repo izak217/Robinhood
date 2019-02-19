@@ -666,6 +666,17 @@ class Robinhood:
     ###########################################################################
     #                           GET OPTIONS INFO
     ###########################################################################
+    def get_options_chain(self, instrumentid):
+        """Get a list (chain) of options contracts belonging to a particular stock
+
+            Args: stock ticker (str), list of expiration dates to filter on (YYYY-MM-DD), and whether or not its a 'put' or a 'call' option type (str).
+
+            Returns:
+                Options Contracts (List): a list (chain) of contracts for a given underlying equity instrument
+        """
+        # instrumentid = self.get_url(self.quote_data(stock)["instrument"])["id"]
+        chain_id = self.get_url(endpoints.chain(instrumentid))["results"][0]["id"]
+        return chain_id
 
     def get_options(self, stock, expiration_dates, option_type):
         """Get a list (chain) of options contracts belonging to a particular stock
