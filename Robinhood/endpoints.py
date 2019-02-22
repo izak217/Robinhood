@@ -93,6 +93,9 @@ def options(chainid, dates, option_type):
 def options_orders():
     return "https://api.robinhood.com/options/orders/"
 
+def options_order(orderId=None):
+    return "https://api.robinhood.com/options/orders/" + ("{id}/".format(id=orderId) if orderId else "")
+
 def market_data(optionid):
     return "https://api.robinhood.com/marketdata/options/{_optionid}/".format(_optionid=optionid)
 
