@@ -15,6 +15,10 @@ import getpass
 import requests
 import six
 import dateutil
+import pyotp
+from urllib.request import Request, urlopen
+from bs4 import BeautifulSoup as soup
+import re
 
 #Application-specific imports
 from . import exceptions as RH_exception
@@ -45,6 +49,7 @@ class Robinhood:
     auth_data = None
     auth_token = None
     oauth_token = None
+    device_token = None
 
     logger = logging.getLogger('Robinhood')
     logger.addHandler(logging.NullHandler())
@@ -128,6 +133,20 @@ class Robinhood:
     #
     #     return False
 
+    def get_device_token(self) :
+        req = Request("https://robinhood.com/login", headers={'User-Agent': 'Mozilla Chrome Safari'})
+        webpage = urlopen(req).read()
+        urlopen(req).close()
+
+        page_soup = soup(webpage, "lxml")
+        container = str(page_soup.findAll("script"))
+
+        self.device_token = re.search('clientId: "(.+?)"', container).group(1)
+
+    def mfa_token(self, secret='') :
+        totp = pyotp.TOTP(secret)
+        return totp.now()
+
     def login(self, username, password, mfa_code=None) :
         self.username = username
         self.password = password
@@ -135,21 +154,28 @@ class Robinhood:
         #fields = { 'password' : self.password, 'username' : self.username, 'mfa_code': self.mfa_code }
         #fields = { 'password' : self.password, 'username' : self.username }
 
+        if self.device_token == None or self.device_token == '' :
+            self.get_device_token()
+
         if mfa_code:
             payload = { 'client_id' : 'c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS',
                         'expires_in' : 86400,
-                        'grant_type': 'password',
-                        'password' : self.password,
                         'scope' : 'internal',
+                        'grant_type': 'password',
                         'username' : self.username,
-                        'mfa_code': self.mfa_code }
+                        'password' : self.password,
+                        'mfa_code': self.mfa_code,
+                        'device_token': self.device_token,
+                        'challenge_type': 'email' }
         else:
             payload = { 'client_id' : 'c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS',
                         'expires_in' : 86400,
-                        'grant_type': 'password',
-                        'password' : self.password,
                         'scope': 'internal',
-                        'username' : self.username }
+                        'grant_type': 'password',
+                        'username' : self.username,
+                        'password' : self.password,
+                        'device_token': self.device_token,
+                        'challenge_type': 'email' }
         # try:
         #     data = urllib.urlencode(fields) #py2
         # except:
