@@ -19,6 +19,8 @@ import pyotp
 from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup as soup
 import re
+import os
+import os.path
 
 #Application-specific imports
 from . import exceptions as RH_exception
@@ -67,7 +69,7 @@ class Robinhood:
             "Accept-Encoding": "gzip, deflate",
             "Accept-Language": "en;q=1, fr;q=0.9, de;q=0.8, ja;q=0.7, nl;q=0.6, it;q=0.5",
             "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
-            "X-Robinhood-API-Version": "1.245.2",
+            "X-Robinhood-API-Version": "1.265.0",
             "Connection": "keep-alive",
             "User-Agent": "Robinhood/823 (iPhone; iOS 9.1.2; Scale/2.00)"
         }
@@ -134,14 +136,24 @@ class Robinhood:
     #     return False
 
     def get_device_token(self) :
-        req = Request("https://robinhood.com/login", headers={'User-Agent': 'Mozilla Chrome Safari'})
-        webpage = urlopen(req).read()
-        urlopen(req).close()
+        home_path = os.path.expanduser('~')
 
-        page_soup = soup(webpage, "lxml")
-        container = str(page_soup.findAll("script"))
+        if not os.path.exists(home_path + '/.robinhood') :
+            os.makedirs(home_path + '/.robinhood')
 
-        self.device_token = re.search('clientId: "(.+?)"', container).group(1)
+        device_id = ''
+        if os.path.isfile(home_path + '/.robinhood/' + 'device_id.txt') :
+            file = open(home_path + '/.robinhood/' + 'device_id.txt', 'r')
+            device_id = file.read()
+            file.close()
+
+        if device_id is None or device_id == '' :
+            device_id = str(uuid.uuid4())
+            file = open(home_path + '/.robinhood/' + 'device_id.txt', 'w')
+            file.write(device_id)
+            file.close()
+        
+        self.device_token = device_id
 
     def mfa_token(self, secret='') :
         totp = pyotp.TOTP(secret)
