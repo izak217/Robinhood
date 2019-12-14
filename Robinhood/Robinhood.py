@@ -152,7 +152,7 @@ class Robinhood:
             file = open(home_path + '/.robinhood/' + 'device_id.txt', 'w')
             file.write(device_id)
             file.close()
-        
+
         self.device_token = device_id
 
     def mfa_token(self, secret='') :
@@ -939,6 +939,14 @@ class Robinhood:
 
         return self.session.get(endpoints.positions(), timeout=15).json()
 
+    def positions_options(self):
+        """Returns the user's positions data on options
+
+            Returns:
+                (:object: `dict`): JSON dict from getting positions
+        """
+
+        return self.session.get(endpoints.positions_options(), timeout=15).json()
 
     def securities_owned(self):
         """Returns list of securities' symbols that the user has shares in

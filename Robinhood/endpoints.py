@@ -57,6 +57,9 @@ def portfolios():
 def positions():
     return "https://api.robinhood.com/positions/"
 
+def positions_options():
+    return 'https://api.robinhood.com/options/aggregate_positions'
+
 def quotes():
     return "https://api.robinhood.com/quotes/"
 
