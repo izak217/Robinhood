@@ -916,6 +916,12 @@ class Robinhood:
 
         return self.session.get(endpoints.options_order(orderId), timeout=15).json()
 
+    def option_events(self) :
+        """Wrapper for option events history
+        """
+
+        return self.session.get(endpoints.options_events(), timeout=15).json()
+
     def dividends(self):
         """Wrapper for portfolios
 

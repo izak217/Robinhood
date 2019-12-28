@@ -99,6 +99,9 @@ def options_orders():
 def options_order(orderId=None):
     return "https://api.robinhood.com/options/orders/" + ("{id}/".format(id=orderId) if orderId else "")
 
+def options_events():
+    return "https://api.robinhood.com/options/events/"
+
 def market_data(optionid):
     return "https://api.robinhood.com/marketdata/options/{_optionid}/".format(_optionid=optionid)
 
